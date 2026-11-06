@@ -336,8 +336,12 @@
   ))
   set figure(numbering: n => numbering("1.1", counter(heading.where(level: 1)).get().first(), n))
 
-  // --- Code Block Styling ---
+
+// --- Code Block Styling ---
   show raw.where(block: true): it => {
+    set text(size: 7pt) // Decrease letter size
+    set par(leading: 0.4em) // Decrease line spacing
+
     let num-width = if it.lines.len() < 100 { 1.8em } else { 2.5em }
     show raw.line: line => {
       box(width: num-width, align(right, text(size: 1em, fill: luma(150))[#line.number]))
@@ -345,28 +349,39 @@
       line.body
     }
     block(
+      width: 100%, // <-- Forces the background block to span the full page width
       fill: luma(245),
-      inset: 10pt,
+      inset: 8pt, // Decreased inner padding to save space
       radius: 2pt,
       stroke: (left: 4pt + den-col),
-      it,
+      breakable: true,
+      align(left, it), // <-- Ensures code stays left-aligned inside figures
     )
   }
+  show figure.where(
+    kind: raw,
+  ): set block(breakable: true) // Fix for multi-page figures containing raw blocks
   show figure.where(
     kind: raw,
   ): set figure.caption(position: top)
   show figure.where(
     kind: table,
   ): set figure.caption(position: top)
-
   //add more vertical space between text and start of figures
   //show figure: set block(inset: (top: 0.5em))
 
   set figure(gap: 1.5em)
 
-  show figure.caption: it => text(
-    [*#it.supplement #it.counter.display(it.numbering):* #it.body],
-  )
+  show figure.caption: it => {
+    let caption = text(
+      [*#it.supplement #it.counter.display(it.numbering):* #it.body],
+    )
+    if it.kind == raw or it.kind == table {
+      block(width: 100%, align(left, caption))
+    } else {
+      caption
+    }
+  }
 
   set align(left) // align text left (i.e. no longer centered)
 
@@ -565,19 +580,22 @@
   // REPORT-SPECIFIC SECTIONS
   // ==========================================================
 
-  if doc-type == "report" {
+if doc-type == "report" {
+    // 1. Instrument Device List (Numbered normally under main numbering)
     if language == "de" {
-      heading(outlined: false, numbering: none, "Geräteverzeichnis")
+      heading(outlined: true, "Geräteverzeichnis")
     } else {
-      heading(outlined: false, numbering: none, "Instrument Device List")
+      heading(outlined: true, "Instrument Device List")
     }
     include "chapters/report-specific/instrument_device_list.typ"
 
     pagebreak()
+
+    // 2. Signatures (Numbered normally under main numbering)
     if language == "de" {
-      heading(outlined: false, numbering: none, "Unterschriften")
+      heading(outlined: true, "Unterschriften")
     } else {
-      heading(outlined: false, numbering: none, "Signatures")
+      heading(outlined: true, "Signatures")
     }
 
     align(horizon, table(
@@ -589,7 +607,7 @@
         [#align(center, stack(
           dir: ttb,
           spacing: 10pt,
-          image("assets/graphics/others/signature_" + str(index + 1) + ".png", height: 10mm),
+          image("assets/graphics/others/signature_" + str(index + 1) + ".jpg", height: 15mm),
           line(length: 100%,  stroke:0.5pt),
           author,
           [#meta.location, #date.display("[day]. [month repr:long] [year]")],
@@ -597,5 +615,12 @@
         v(2.5em, weak: true)
       }
     ))
+
+    // 3. APPENDIX (Switched to letter numbering A.1 here at the very end)
+    pagebreak()
+    counter(heading).update(0)
+    set heading(numbering: "A.1")
+    
+    include "chapters/appendix.typ"
   }
 }

@@ -104,38 +104,32 @@
 // Create a table from csv,
 //   render first line bold,
 //   use alternating line colors
-#let fhjtable(
-  tabledata: "",
-  columns: 1,
-  header-row: gray.lighten(60%),
-  even-row: rgb(255, 255, 255),
-  odd-row: rgb(228, 234, 250),
-  align: (col, row) => if row == 0 { center } else { left },
-  inset: (x: 0.5em, top: 0.3em, bottom: 0.9em),
-) = {
-  let parsed = if type(tabledata) == str { csv(bytes(tabledata)) } else { tabledata }
-  let tableheadings = parsed.first()
-  let data = parsed.slice(1).flatten()
-  let col-widths = if type(columns) == int { (1fr,) * columns } else { columns }
-  {
-    table(
-      columns: col-widths,
-
-      fill: (_, row) => if row == 0 {
-        header-row // color for header row
-      } else if calc.odd(row) {
-        odd-row // each other row colored
-      } else {
-        even-row
-      },
-      inset: inset,
-      stroke: 0.6pt, // + gray.darken(20%),
-      align: align,
-      ..tableheadings.map(x => [*#x*]), // bold headings
-      ..data,
-    )
-  }
-}
+#figure(
+  table(
+    columns: (auto, auto, 1fr),
+    align: (left, center, left),
+    stroke: 0.5pt + luma(200),
+    fill: (_, row) => if row == 0 { luma(230) } else if calc.odd(row) { luma(250) } else { none },
+    
+    table.header(
+      [*Type*], 
+      [*Serial Number*], 
+      [*Notes*]
+    ),
+    
+    [FPGA Design Tool \ _Vivado_], 
+    [-], 
+    [Synthesis, implementation, and bitstream generation (Version 2019.1)],
+    
+    [USB Logic Analyzer & Oscilloscope \ _Analog Discovery 3_], 
+    [-], 
+    [Hardware measurement, signal observation, and stimulus generation],
+    
+    [Instrument Software \ _WaveForms_], 
+    [-], 
+    [Software interface used to control the Analog Discovery 3]
+  ),
+)
 
 // Optionally, during review process you might want to
 // highlight changed text blocks with #fhjrevisionmark([ ... ]):
